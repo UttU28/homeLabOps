@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saral-api
+  labels:
+    app.kubernetes.io/name: saral-api
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: saral-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: saral-api
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/uttu28/saral-api:latest
+          ports:
+            - name: http
+              containerPort: 9260
+          envFrom:
+            - secretRef:
+                name: saralBackendEnv
+          env:
+            - name: REDIS_ENABLED
+              value: "true"
+            - name: REDIS_URL
+              value: redis://saral-redis:9262/0
+            - name: API_PORT
+              value: "9260"
+          volumeMounts:
+            - name: gmailClientSecret
+              mountPath: /app/client_secret.json
+              subPath: client_secret.json
+              readOnly: true
+            - name: dockerSock
+              mountPath: /var/run/docker.sock
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 9260
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 9260
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: gmailClientSecret
+          secret:
+            secretName: saralGmailClient
+        - name: dockerSock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
