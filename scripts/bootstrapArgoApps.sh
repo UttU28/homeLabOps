@@ -12,6 +12,12 @@ bootstrapArgoApps() {
     exit 1
   fi
 
+  if kubectl get ns ingress-nginx &>/dev/null; then
+    echo "Waiting for ingress-nginx controller (admission webhook must be ready)…"
+    kubectl wait --for=condition=available deployment/ingress-nginx-controller \
+      -n ingress-nginx --timeout=180s 2>/dev/null || true
+  fi
+
   kubectl apply -f "${argocdPath}/"
   echo "Argo CD applications applied from ${argocdPath}"
   kubectl get applications -n argocd
