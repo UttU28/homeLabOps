@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: saral-api
     app.kubernetes.io/component: backend
 spec:
-  replicas: 1
+  replicas: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: saral-api
