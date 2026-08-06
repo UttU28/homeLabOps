@@ -33,11 +33,11 @@ spec:
             - name: API_PORT
               value: "9260"
           volumeMounts:
-            - name: gmailClientSecret
+            - name: gmail-client-secret
               mountPath: /app/client_secret.json
               subPath: client_secret.json
               readOnly: true
-            - name: dockerSock
+            - name: docker-sock
               mountPath: /var/run/docker.sock
           readinessProbe:
             httpGet:
@@ -59,10 +59,10 @@ spec:
               cpu: "1"
               memory: 1Gi
       volumes:
-        - name: gmailClientSecret
+        - name: gmail-client-secret
           secret:
             secretName: saral-gmail-client
-        - name: dockerSock
+        - name: docker-sock
           hostPath:
             path: /var/run/docker.sock
             type: Socket
