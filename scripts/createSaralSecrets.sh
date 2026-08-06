@@ -17,12 +17,12 @@ createBackendEnvSecret() {
 
   kubectl create namespace "${namespace}" --dry-run=client -o yaml | kubectl apply -f -
 
-  kubectl create secret generic saralBackendEnv \
+  kubectl create secret generic saral-backend-env \
     --from-env-file="${backendEnv}" \
     --namespace="${namespace}" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-  echo "Secret saralBackendEnv updated in namespace ${namespace}"
+  echo "Secret saral-backend-env updated in namespace ${namespace}"
 }
 
 createGmailClientSecret() {
@@ -31,12 +31,12 @@ createGmailClientSecret() {
     return 0
   fi
 
-  kubectl create secret generic saralGmailClient \
+  kubectl create secret generic saral-gmail-client \
     --from-file=client_secret.json="${gmailJson}" \
     --namespace="${namespace}" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-  echo "Secret saralGmailClient updated in namespace ${namespace}"
+  echo "Secret saral-gmail-client updated in namespace ${namespace}"
 }
 
 createSaralSecrets() {

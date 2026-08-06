@@ -24,7 +24,7 @@ spec:
               containerPort: 9260
           envFrom:
             - secretRef:
-                name: saralBackendEnv
+                name: saral-backend-env
           env:
             - name: REDIS_ENABLED
               value: "true"
@@ -61,7 +61,7 @@ spec:
       volumes:
         - name: gmailClientSecret
           secret:
-            secretName: saralGmailClient
+            secretName: saral-gmail-client
         - name: dockerSock
           hostPath:
             path: /var/run/docker.sock
