@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saral
+  labels:
+    app.kubernetes.io/name: saral-ingress
+    app.kubernetes.io/component: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - saral.thatinsaneguy.com
+      secretName: saral-tls
+  rules:
+    - host: saral.thatinsaneguy.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: saral-api
+                port:
+                  number: 9260
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: saral-ui
+                port:
+                  number: 9261

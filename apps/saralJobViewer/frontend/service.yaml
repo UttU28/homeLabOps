@@ -5,11 +5,10 @@ metadata:
   labels:
     app.kubernetes.io/name: saral-ui
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app.kubernetes.io/name: saral-ui
   ports:
     - name: http
       port: 9261
       targetPort: 9261
-      nodePort: 30261

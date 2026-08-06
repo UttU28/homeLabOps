@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: saral-job-viewer
+  name: ingress-nginx
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -12,13 +12,14 @@ spec:
   source:
     repoURL: https://github.com/UttU28/homeLabOps.git
     targetRevision: main
-    path: apps/saralJobViewer
+    path: platform/ingressNginx
   destination:
     server: https://kubernetes.default.svc
-    namespace: saral
+    namespace: ingress-nginx
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true

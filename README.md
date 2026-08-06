@@ -1,54 +1,72 @@
 # homeLabOps
 
 GitOps manifests for the homelab Kubernetes cluster (`supernova`).  
-Argo CD watches this repo; **app code and Docker builds stay in app repos** (e.g. `Saral-Job-Viewer`).
+**App code and Docker builds stay in app repos**; routing, ingress, and TLS live here (org-style).
 
 ## Layout
 
 ```text
 homeLabOps/
-├── apps/saralJobViewer/     # Kustomize — api, ui, redis (1 replica each)
+├── platform/
+│   ├── certManager/         # cert-manager + Let's Encrypt ClusterIssuer
+│   ├── ingressNginx/        # ingress-nginx controller (NodePorts 30080/30443)
+│   └── edgeNginx/           # optional host edge proxy templates (homelab)
+├── apps/saralJobViewer/     # app workloads + Ingress (routing in GitOps)
 ├── argocd/                  # Argo CD Application manifests
-└── scripts/                 # bootstrap, secrets, local apply, image tags
+└── scripts/
 ```
+
+## Org-style flow
+
+```text
+Push Saral code → CI → GHCR → bump image tag here → Argo syncs
+                                                      ├── Ingress (routes + TLS)
+                                                      ├── Deployments / Services (ClusterIP)
+                                                      └── cert-manager issues saral-tls
+Host edge nginx (optional) → proxies :80/:443 → ingress NodePorts
+```
+
+| Concern | Repo |
+|---------|------|
+| App source, Dockerfile, CI | `Saral-Job-Viewer` |
+| Deployments, Services, **Ingress**, image tags | **homeLabOps** |
+| Platform (ingress-nginx, cert-manager) | **homeLabOps/platform** |
+| Host edge proxy (single-server homelab) | **homeLabOps/platform/edgeNginx** |
 
 ## Quick start
 
 ```bash
-# 1) Create K8s secrets from Saral backend env (once per cluster)
-./scripts/createSaralSecrets.sh
+# 1) Platform (once per cluster)
+./scripts/bootstrapPlatform.sh
+# wait until cert-manager + ingress-nginx are Synced/Healthy in Argo
 
-# 2) Register app with Argo CD
+# 2) App secrets + Argo apps
+./scripts/createSaralSecrets.sh
 ./scripts/bootstrapArgoApps.sh
 
-# 3) Or apply without Argo (smoke test)
-./scripts/applySaralLocally.sh
+# 3) Host edge nginx (homelab — proxies to in-cluster ingress)
+sudo ./scripts/configureEdgeNginx.sh
+
+# 4) Smoke test
+curl -s http://127.0.0.1:30080/api/health -H 'Host: saral.thatinsaneguy.com'
 ```
 
 ## GitHub repos
 
 | Repo | Role |
 |------|------|
-| [Saral-Job-Viewer](https://github.com/UttU28/Saral-Job-Viewer) | App source + `.github/workflows/homelabBuildAndDeploy.yml` |
-| **homeLabOps** (this repo) | Deploy manifests only — image tags updated by CI |
-
-Push to `main` on Saral → Actions builds images → GHCR → bumps tags here → Argo syncs.
+| [Saral-Job-Viewer](https://github.com/UttU28/Saral-Job-Viewer) | App source + CI only |
+| **homeLabOps** | GitOps — platform + apps + ingress |
 
 ## Secrets (GitHub Actions — Saral repo)
 
 | Secret | Purpose |
 |--------|---------|
-| `GITHUB_TOKEN` | Push to GHCR (built-in) |
-| `HOMELABOPS_GIT_TOKEN` | PAT with `repo` scope — commit tag bumps to homeLabOps |
-| `HOMELABOPS_REPO` | `UttU28/homeLabOps` |
+| `HOMELABOPS_GIT_TOKEN` | PAT — commit tag bumps to homeLabOps |
 
-## Local paths
+## ClusterIssuer email
 
-Scripts assume Saral lives at `~/Desktop/Saral-Job-Viewer`. Override:
-
-```bash
-export saralAppRoot=/path/to/Saral-Job-Viewer
-```
+Edit `platform/certManager/clusterIssuer.yaml` (`certs@thatinsaneguy.com`) if needed.
 
 ## Scraping
 
