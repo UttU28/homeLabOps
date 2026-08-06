@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
-# Install homelab edge nginx vhost — proxies domain traffic to in-cluster Ingress.
+# Install homelab edge nginx vhosts — proxy domain traffic to in-cluster Ingress.
 set -euo pipefail
 
 scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repoRoot="$(cd "${scriptDir}/.." && pwd)"
-edgeTemplate="${repoRoot}/platform/edgeNginx/saral.thatinsaneguy.com.conf"
-nginxSite="${edgeNginxSite:-/etc/nginx/sites-available/saral.thatinsaneguy.com}"
-leCert="/etc/letsencrypt/live/saral.thatinsaneguy.com/fullchain.pem"
+edgeDir="${repoRoot}/platform/edgeNginx"
 
 configureEdgeNginx() {
-  if [[ ! -f "${edgeTemplate}" ]]; then
-    echo "Missing ${edgeTemplate}"
+  if [[ ! -d "${edgeDir}" ]]; then
+    echo "Missing ${edgeDir}"
     exit 1
   fi
 
@@ -20,23 +18,40 @@ configureEdgeNginx() {
     exit 1
   fi
 
-  if [[ -f "${nginxSite}" ]]; then
-    cp "${nginxSite}" "${nginxSite}.bak.$(date +%Y%m%d%H%M%S)"
+  shopt -s nullglob
+  local configs=("${edgeDir}"/*.conf)
+  if [[ ${#configs[@]} -eq 0 ]]; then
+    echo "No *.conf files in ${edgeDir}"
+    exit 1
   fi
 
-  cp "${edgeTemplate}" "${nginxSite}"
-  mkdir -p /etc/nginx/sites-enabled
-  ln -sf "${nginxSite}" "/etc/nginx/sites-enabled/saral.thatinsaneguy.com"
+  mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 
-  if [[ ! -f "${leCert}" ]]; then
-    echo "Warning: ${leCert} not found — HTTPS block needs a cert for nginx to reload."
-    echo "Run cert-manager sync first, or keep existing certbot cert at that path."
-  fi
+  for edgeTemplate in "${configs[@]}"; do
+    local siteName
+    siteName="$(basename "${edgeTemplate}")"
+    local nginxSite="/etc/nginx/sites-available/${siteName}"
+    local domain="${siteName%.conf}"
+    local leCert="/etc/letsencrypt/live/${domain}/fullchain.pem"
+
+    if [[ -f "${nginxSite}" ]]; then
+      cp "${nginxSite}" "${nginxSite}.bak.$(date +%Y%m%d%H%M%S)"
+    fi
+
+    cp "${edgeTemplate}" "${nginxSite}"
+    ln -sf "${nginxSite}" "/etc/nginx/sites-enabled/${siteName}"
+
+    if [[ ! -f "${leCert}" ]]; then
+      echo "Warning: ${leCert} not found — HTTPS block for ${domain} needs a cert for nginx to reload."
+    fi
+
+    echo "Installed edge vhost: ${nginxSite}"
+  done
 
   nginx -t
   systemctl reload nginx 2>/dev/null || service nginx reload 2>/dev/null || nginx -s reload
 
-  echo "Edge nginx updated: ${nginxSite}"
+  echo "Edge nginx updated (${#configs[@]} site(s))."
   echo "  HTTP  → ingress NodePort 30080"
   echo "  HTTPS → ingress NodePort 30443 (TLS from cert-manager in cluster)"
 }
