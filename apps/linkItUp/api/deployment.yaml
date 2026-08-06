@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkitup-api
+  labels:
+    app.kubernetes.io/name: linkitup-api
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: linkitup-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: linkitup-api
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/uttu28/linkitup-api:latest
+          ports:
+            - name: http
+              containerPort: 9221
+          envFrom:
+            - secretRef:
+                name: linkitup-backend-env
+          env:
+            - name: PORT
+              value: "9221"
+            - name: FIREBASE_SERVICE_ACCOUNT_PATH
+              value: /app/firebaseServiceAccountKey.json
+          volumeMounts:
+            - name: firebase-credentials
+              mountPath: /app/firebaseServiceAccountKey.json
+              subPath: firebaseServiceAccountKey.json
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9221
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9221
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: firebase-credentials
+          secret:
+            secretName: linkitup-firebase-credentials

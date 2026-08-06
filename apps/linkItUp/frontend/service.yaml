@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: linkitup-ui
+  labels:
+    app.kubernetes.io/name: linkitup-ui
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: linkitup-ui
+  ports:
+    - name: http
+      port: 9220
+      targetPort: 9220
