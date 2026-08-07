@@ -9,7 +9,8 @@ resources:
   - api/service.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
-  - ingress.yaml
+  - ingress-api.yaml
+  - ingress-ui.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: linkItUp
