@@ -20,7 +20,7 @@ updateImageTag() {
   awk -v img="${imageName}" -v tag="${newTag}" '
     $0 ~ "name: " img { inBlock=1 }
     inBlock && $0 ~ /^[[:space:]]*newTag:/ {
-      sub(/newTag:.*/, "newTag: " tag)
+      sub(/newTag:.*/, "newTag: \"" tag "\"")
       inBlock=0
     }
     { print }
