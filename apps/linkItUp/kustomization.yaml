@@ -19,7 +19,7 @@ commonLabels:
 images:
   - name: ghcr.io/uttu28/linkitup-api
     newName: ghcr.io/uttu28/linkitup-api
-    newTag: "cf6e55d"
+    newTag: "8697bd2"
   - name: ghcr.io/uttu28/linkitup-ui
     newName: ghcr.io/uttu28/linkitup-ui
-    newTag: "cf6e55d"
+    newTag: "8697bd2"
