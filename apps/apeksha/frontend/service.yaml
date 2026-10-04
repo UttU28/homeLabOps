@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apeksha-ui
+  labels:
+    app.kubernetes.io/name: apeksha-ui
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: apeksha-ui
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200
