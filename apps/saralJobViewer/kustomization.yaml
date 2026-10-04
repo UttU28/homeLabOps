@@ -20,10 +20,10 @@ commonLabels:
 images:
   - name: ghcr.io/uttu28/saral-api
     newName: ghcr.io/uttu28/saral-api
-    newTag: "e996be9"
+    newTag: "src-a5d07c323d9f"
   - name: ghcr.io/uttu28/saral-ui
     newName: ghcr.io/uttu28/saral-ui
-    newTag: "e996be9"
+    newTag: "src-7121e6cf0b62"
   - name: ghcr.io/uttu28/saral-redis
     newName: ghcr.io/uttu28/saral-redis
-    newTag: "e996be9"
+    newTag: "src-d2ae4a1dafa0"
